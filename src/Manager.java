@@ -13,22 +13,17 @@ public class Manager {
     }
 
 // **********************************************************  Методы для работы с задачами класса SimpleTask.
-    // Возвращает null, если задача добавлена или аргументом метода является null.
-    // Возвращает SimpleTask-объект, если задача с таким id уже имеется.
-    public SimpleTask addSimpleTask(SimpleTask task) {
+    public void addSimpleTask(SimpleTask task) throws ManagerException {
         int taskId;
-        SimpleTask taskInMap;
 
-        if (task != null) {
-            taskId = task.getId();
-            taskInMap = simpleTasks.get(taskId);
-            if (taskInMap != null) {
-                return taskInMap;  // Потенциальное TaskExists();
-            } else {
-                return simpleTasks.put(taskId, task);
-            }
+        if (task == null) {
+            throw new ManagerException();  // NullArgument
         }
-        return null;  // Потенциальное throw new NullArgument();
+        taskId = task.getId();
+        if (simpleTasks.get(taskId) != null) {
+            throw new ManagerException();  // TaskExists
+        }
+        simpleTasks.put(taskId, task);
     }
 
     public SimpleTask getSimpleTask(int id) {
@@ -47,51 +42,37 @@ public class Manager {
         simpleTasks.clear();
     }
 
-    // Возвращает задачу, которая была в списке и была заменена.
-    // Возвращает null, если задачи нет в списке (новая версия задачи при этом не добавляется)
-    // или если в качестве аргумента передана пустая ссылка
-    public SimpleTask updateSimpleTask(SimpleTask task) {
+    public void updateSimpleTask(SimpleTask task) throws ManagerException {
         int taskId;
-        SimpleTask taskInMap;
 
-        if (task != null) {
-            taskId = task.getId();
-            taskInMap = simpleTasks.get(taskId);
-            if (taskInMap == null) {
-                return null;
-            } else {
-                simpleTasks.put(taskId, task);
-                return taskInMap;
-            }
+        if (task == null) {
+            throw new ManagerException();  // NullArgument
         }
-        return null;
+        taskId = task.getId();
+        if (simpleTasks.get(taskId) == null) {
+            throw new ManagerException();  // SimpleTaskDoesNotExist
+        }
+        simpleTasks.put(taskId, task);
     }
 
 
 // ********************************************************** Методы для работы с задачами класса EpicTask.
-    // Возвращает null, если эпик добавлен или аргументом метода является null.
-    // Возвращает ссылку эпика из списка, если эпик с таким id уже имеется.
-    // Возвращает эпик-аргумент, если он содержит подзадачи (эпик при добавлении должен быть пустым).
-    public EpicTask addEpicTask(EpicTask task) {
+    public void addEpicTask(EpicTask task) throws ManagerException {
         int taskId;
-        EpicTask taskInMap;
 
-        if (task != null) {
-            taskId = task.getId();
-            taskInMap = epicTasks.get(taskId);
-
-            if (taskInMap != null) {
-                return taskInMap;  // потенциальное throw new TaskExists();
-            } else {
-                // Список подзадач нового эпика должен быть пустым
-                if (task.getSubtasks().size() == 0) {
-                    return epicTasks.put(taskId, task); // Возвращает null
-                } else {
-                    return task;  // потенциальное throw new BadTaskData();
-                }
-            }
+        if (task == null) {
+            throw new ManagerException(); // NullArgument
         }
-        return null;    // потенциальное throw new NullArgument();
+        taskId = task.getId();
+
+        if (epicTasks.get(taskId) != null) {
+            throw new ManagerException();  // TaskExists
+        }
+        // Список подзадач нового эпика должен быть пустым
+        if (task.getSubtasks().size() != 0) {
+            throw new ManagerException();  // BadTaskData
+        }
+        epicTasks.put(taskId, task); // Возвращает null
     }
 
     public EpicTask getEpicTask(int id) {
@@ -102,15 +83,19 @@ public class Manager {
         return List.copyOf(epicTasks.keySet());
     }
 
-    public EpicTask removeEpicTask(int id) {
-        EpicTask epic = epicTasks.get(id);
-        if (epic != null) {
-            for (int subtaskId: epic.getSubtasks()) {
+    public void removeEpicTask(int id) {
+        try {
+            EpicTask epic = epicTasks.get(id);
+            if (epic == null) {
+                throw new ManagerException();  // EpicDoesNotExist
+            }
+            for (int subtaskId : epic.getSubtasks()) {
                 removeSubtask(subtaskId);
             }
-            return epicTasks.remove(id);
+            epicTasks.remove(id);
+        } catch (ManagerException e) {
+            System.err.println("Эпик с id=" + id + " не существует. Отсутствует объект для удаления.");
         }
-        return null;
     }
 
     public void removeAllEpicTasks() {
@@ -118,59 +103,48 @@ public class Manager {
         epicTasks.clear();
     }
 
-    // Возвращает ссылку на задачу, которая была в списке и была заменена, или
-    // ссылку на саму задачу, если ее подзадачи не совпадают с подзадачами задачи из списка.
-    // Возвращает null, если задача отсутствует в списке (обновление задачи при этом не выполняется)
-    // или если в качестве аргумента передана пустая ссылка
-    public EpicTask updateEpicTask(EpicTask task) {
+    public void updateEpicTask(EpicTask task) throws ManagerException {
         int taskId;
         EpicTask taskInMap;
 
-        if (task != null) {
-            taskId = task.getId();
-            taskInMap = epicTasks.get(taskId);
-
-            if (taskInMap == null) {
-                return null;
-            } else {
-                if (task.getSubtasks().equals(taskInMap.getSubtasks())) {
-                    return epicTasks.put(taskId, task);
-                } else {
-                    return task;
-                }
-            }
+        if (task == null) {
+            throw new ManagerException();  // NullArgument
         }
-        return null;
+        taskId = task.getId();
+        taskInMap = epicTasks.get(taskId);
+        if (taskInMap == null) {
+            throw new ManagerException();  // EpicTaskDoesNotExist
+        }
+        if (!task.getSubtasks().equals(taskInMap.getSubtasks())) {
+            throw new ManagerException();  // EpicsDoNotMatch
+        }
+        epicTasks.put(taskId, task);
     }
 
 // ********************************************************** Методы для работы с задачами класса Subtask.
-    // Возвращает null, если подзадача добавлена в список или аргументом метода является null.
-    // Возвращает ссылку подзадачи из списка, если подзадача с таким id уже имеется.
-    // Возвращает подзадачу-аргумент, если используется некорректный id родительского эпика.
-    public Subtask addSubtask(Subtask task) {
+    public void addSubtask(Subtask task) throws ManagerException {
         Subtask taskInMap;
         EpicTask parentEpic;
-        if (task != null) {
-            int taskId = task.getId();
-            taskInMap = subtasks.get(taskId);
 
-            int epicId = task.getParentEpicId();
-            parentEpic = epicTasks.get(epicId);
-
-            if (taskInMap != null) {
-                return taskInMap;   // Потенциальный throw new TaskExists();
-            } else {
-                if (parentEpic == null) {
-                    return task;   // Потенциальный throw new BadTaskData();
-                } else {
-                    parentEpic.bindSubtask(taskId);
-                    subtasks.put(taskId, task);
-                    parentEpic.updateStatus();
-                    return null;
-                }
-            }
+        if (task == null) {
+            throw new ManagerException();  // NullArgument
         }
-        return null;  // Потенциальный throw new NullArgument();
+
+        int taskId = task.getId();
+        taskInMap = subtasks.get(taskId);
+        if (taskInMap != null) {
+            throw new ManagerException();  // TaskExists
+        }
+
+        int epicId = task.getParentEpicId();
+        parentEpic = epicTasks.get(epicId);
+        if (parentEpic == null) {
+            throw new ManagerException();  // BadParentEpic
+        }
+
+        subtasks.put(taskId, task);
+        parentEpic.bindSubtask(taskId);
+        parentEpic.updateStatus();
     }
 
     public Subtask getSubtask(int id) {
@@ -181,18 +155,31 @@ public class Manager {
         return List.copyOf(subtasks.keySet());
     }
 
-    public Subtask removeSubtask(int id) {
+    public void removeSubtask(int id) {
         Subtask subtask = subtasks.get(id);
         EpicTask epic;
+        int epicId = 0;
 
-        if (subtask != null) {
-            epic = epicTasks.get(subtask.getParentEpicId());
-            epic.unbindSubtask(id);
-            subtask = subtasks.remove(id);
-            epic.updateStatus();
-            return subtask;
+        try {
+            if (subtask == null) {
+                throw new ManagerException();  // SubtaskDoesNotExist
+            }
+            epicId = subtask.getParentEpicId();
+            subtasks.remove(id);
+        } catch (ManagerException e) {
+            System.err.println("Подзадача с id=" + id + " не существует, чтобы ее удалить.");
         }
-        return null;
+
+        try {
+            epic = epicTasks.get(epicId);
+            if (epic == null) {
+                throw new ManagerException();  // EpicTaskDoesNotExist
+            }
+            epic.unbindSubtask(id);
+            epic.updateStatus();
+        } catch (ManagerException e) {
+            System.err.println("Эпик для подзадачи с id=" + id + " не существует.");
+        }
     }
 
     public void removeAllSubtasks() {
@@ -204,34 +191,27 @@ public class Manager {
         }
     }
 
-
-    // Возвращает ссылку на подзадачу, которая была в списке и была заменена.
-    // Возвращает ссылку на саму подзадачу, если ее родительский эпик отличается от родительского эпика подзадачи
-    // из списка (обновление подзадачи в этом случае не выполняется).
-    // Возвращает null, если подзадачи нет в списке (обновление подзадачи при этом не выполняется)
-    // или если в качестве аргумента передана пустая ссылка.
-    public Subtask updateSubtask(Subtask subtask) {
+    public void updateSubtask(Subtask subtask) throws ManagerException {
         int subtaskId;
         Subtask subtaskInMap;
-        Subtask result;
 
-        if (subtask != null) {
-            subtaskId = subtask.getId();
-            subtaskInMap = subtasks.get(subtaskId);
-
-            if (subtaskInMap == null) {
-                return null;
-            } else {
-                if (subtask.getParentEpicId() == subtaskInMap.getParentEpicId()) {
-                    result = subtasks.put(subtaskId, subtask);
-                    epicTasks.get(subtask.getParentEpicId()).updateStatus();
-                    return result;
-                } else {
-                    return subtask;
-                }
-            }
+        if (subtask == null) {
+            throw new ManagerException();  // NullArgument
         }
-        return null;
+
+        subtaskId = subtask.getId();
+        subtaskInMap = subtasks.get(subtaskId);
+
+        if (subtaskInMap == null) {
+            throw new ManagerException();  // SubtaskDoesNotExist
+        }
+
+        if (subtask.getParentEpicId() == subtaskInMap.getParentEpicId()) {
+            subtasks.put(subtaskId, subtask);
+            epicTasks.get(subtask.getParentEpicId()).updateStatus();
+        } else {
+            throw new ManagerException();  // SubtaskHasWrongEpic
+        }
     }
 
     @Override
