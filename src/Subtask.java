@@ -1,7 +1,6 @@
 public class Subtask extends Task {
     private final int parentEpicId;
 
-    // Перед вызовом конструктора необходимо проверить наличие соответствующего эпика.
     public Subtask(int parentEpicId, String title, String description) {
         super(title, description);
         this.parentEpicId = parentEpicId;

@@ -1,13 +1,11 @@
 public abstract class Task {
-    static int lastTaskId = 0;
-
     int taskId;
     private String title;
     private String description;
     private TaskStatus status;
 
     protected Task(String title, String description) {
-        this.taskId = ++lastTaskId;
+        this.taskId = 0;
         this.status = TaskStatus.NEW;
         this.title = title;
         this.description = description;
@@ -40,11 +38,15 @@ public abstract class Task {
         return taskId;
     }
 
+    public void setId(int taskId) {
+        this.taskId = taskId;
+    }
+
     public TaskStatus getStatus() {
         return status;
     }
 
-    protected void setStatus(TaskStatus status) {
+    void setStatus(TaskStatus status) {
         this.status = status;
     }
 
