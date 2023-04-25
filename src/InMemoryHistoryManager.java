@@ -1,12 +1,12 @@
 import java.util.List;
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private List<Task> history;
+    private final List<Task> history;
     private final int sizeOfHistory;  // Заданный размер истории задач
 
     public InMemoryHistoryManager(int size) {
-        history = new ArrayList<>(size);
+        history = new LinkedList<>();
         this.sizeOfHistory = size;
     }
 
