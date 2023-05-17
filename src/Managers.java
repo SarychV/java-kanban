@@ -3,7 +3,7 @@ public class Managers {
     HistoryManager defaultHistoryManager;
 
     public Managers() {
-        defaultHistoryManager = new InMemoryHistoryManager(10);
+        defaultHistoryManager = new InMemoryHistoryManager();
         defaultTaskManager = new InMemoryTaskManager(defaultHistoryManager);
     }
     public TaskManager getDefault() {

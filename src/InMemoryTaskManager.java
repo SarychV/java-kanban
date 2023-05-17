@@ -7,7 +7,7 @@ public class InMemoryTaskManager implements TaskManager {
     private final HashMap<Integer, EpicTask> epicTasks;
     private final HashMap<Integer, Subtask> subtasks;
 
-    private HistoryManager historyManager;
+    private final HistoryManager historyManager;
 
     public InMemoryTaskManager(HistoryManager history) {
         simpleTasks = new HashMap<>();
@@ -66,11 +66,15 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeSimpleTask(int id) {
         simpleTasks.remove(id);
+        historyManager.remove(id);
     }
 
     @Override
     public void removeAllSimpleTasks() {
-        simpleTasks.clear();
+        for (Integer id : simpleTasks.keySet()) {
+            simpleTasks.remove(id);
+            historyManager.remove(id);
+        }
     }
 
     private int addSimpleTask(SimpleTask task) {
@@ -105,24 +109,24 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeEpicTask(int id) {
-        try {
-            EpicTask epic = epicTasks.get(id);
-            if (epic == null) {
-                throw new ManagerException();  // EpicDoesNotExist
-            }
-            for (int subtaskId : epic.getSubtasks()) {
-                removeSubtask(subtaskId);
-            }
-            epicTasks.remove(id);
-        } catch (ManagerException e) {
+        EpicTask epic = epicTasks.get(id);
+        if (epic == null) {
             System.err.println("Эпик с id=" + id + " не существует. Отсутствует объект для удаления.");
+            return;
         }
+        for (int subtaskId : epic.getSubtasks()) {
+            removeSubtask(subtaskId);
+        }
+        epicTasks.remove(id);
+        historyManager.remove(id);
     }
 
     @Override
     public void removeAllEpicTasks() {
-        subtasks.clear();
-        epicTasks.clear();
+        removeAllSubtasks();
+        for (int id : epicTasks.keySet()) {
+            removeEpicTask(id);
+        }
     }
 
     private int addEpicTask(EpicTask task) throws ManagerException {
@@ -208,28 +212,22 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeSubtask(int id) {
         Subtask subtask = subtasks.get(id);
         EpicTask epic;
-        int epicId = 0;
 
-        try {
-            if (subtask == null) {
-                throw new ManagerException();  // SubtaskDoesNotExist
-            }
-            epicId = subtask.getParentEpicId();
-            subtasks.remove(id);
-        } catch (ManagerException e) {
+        if (subtask == null) {
             System.err.println("Подзадача с id=" + id + " не существует, чтобы ее удалить.");
+            return;
         }
+        int epicId = subtask.getParentEpicId();
+        subtasks.remove(id);
+        historyManager.remove(id);
 
-        try {
-            epic = epicTasks.get(epicId);
-            if (epic == null) {
-                throw new ManagerException();  // EpicTaskDoesNotExist
-            }
-            epic.unbindSubtask(id);
-            updateEpicStatus(epicId);
-        } catch (ManagerException e) {
+        epic = epicTasks.get(epicId);
+        if (epic == null) {
             System.err.println("Эпик для подзадачи с id=" + id + " не существует.");
+            return;
         }
+        epic.unbindSubtask(id);
+        updateEpicStatus(epicId);
     }
 
     @Override

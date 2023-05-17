@@ -3,25 +3,53 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Поехали!");
         Managers manager = new Managers();
+        testFinalSprint5(manager);
+    }
 
-        makeTasks(manager);
-        testHistory(manager);
-        System.out.println("\nПервая серия обращений к менеджеру....");
-        System.out.println(manager.getDefaultHistory().getHistory());
-        testHistory(manager);
-        System.out.println("\nВторая серия обращений к менеджеру....");
-        System.out.println(manager.getDefaultHistory().getHistory());
+    public static void testFinalSprint5(Managers manager) {
+        TaskManager taskManager = manager.getDefault();
+        HistoryManager history = manager.getDefaultHistory();
 
+        EpicTask epic1 = new EpicTask("Эпик №1", "Будет включать три подзадачи.");
+        EpicTask epic2 = new EpicTask("Эпик №2", "Подзадачи отсутствуют.");
 
-        System.out.println();
-        TaskManager taskManager= manager.getDefault();
+        try {
+            int epic1Id = taskManager.addTask(epic1);
+            int epic2Id = taskManager.addTask(epic2);
 
-        taskManager.removeAllSubtasks();
-        taskManager.removeAllSimpleTasks();
-        System.out.println(taskManager);
+            Subtask sub1 = new Subtask(epic1Id, "Первая подзадача эпика №1",
+                    "Детальное описание первой подзадачи эпика №1.");
+            Subtask sub2 = new Subtask(epic1Id, "Вторая подзадача эпика №1",
+                    "Детальное описание второй подзадачи эпика №1");
+            Subtask sub3 = new Subtask(epic1Id, "Третья подзадача эпика №1",
+                    "Очень детальное описание третьей подзадачи эпика №1");
+            int sub1Id = taskManager.addTask(sub1);
+            int sub2Id = taskManager.addTask(sub2);
+            int sub3Id = taskManager.addTask(sub3);
 
-        taskManager.removeAllEpicTasks();
-        System.out.println(taskManager);
+            taskManager.getEpicTask(epic2Id);
+            taskManager.getSubtask(sub2Id);
+            taskManager.getSubtask(sub1Id);
+            taskManager.getEpicTask(epic1Id);
+            taskManager.getSubtask(sub3Id);
+            System.out.println(history.getHistory());
+
+            taskManager.getSubtask(sub2Id);
+            taskManager.getSubtask(sub1Id);
+            taskManager.getEpicTask(epic2Id);
+            System.out.println(history.getHistory());
+
+            taskManager.getSubtask(sub3Id);
+            taskManager.getEpicTask(epic1Id);
+            taskManager.removeSubtask(sub2Id);
+            System.out.println(history.getHistory());
+
+            taskManager.removeEpicTask(epic1Id);
+            System.out.println(history.getHistory());
+
+        } catch (Exception e) {
+            System.err.println("Перехват исключения в методе testFinalSprint5().");
+        }
     }
 
     public static void makeTasks(Managers manager) {
@@ -38,8 +66,8 @@ public class Main {
         EpicTask epic2 = new EpicTask("Эпик №2", "Должен включать одну подзадачу.");
 
         try {
-            simple1.setId(taskManager.addTask(simple1));
-            simple2.setId(taskManager.addTask(simple2));
+            taskManager.addTask(simple1);
+            taskManager.addTask(simple2);
             System.out.println(taskManager);
 
             SimpleTask simple3 = new SimpleTask(
@@ -51,8 +79,8 @@ public class Main {
             taskManager.updateTask(simple3);
             System.out.println(taskManager);
 
-            epic1.setId(taskManager.addTask(epic1));
-            epic2.setId(taskManager.addTask(epic2));
+            taskManager.addTask(epic1);
+            taskManager.addTask(epic2);
             System.out.println(taskManager);
 
             Subtask sub1 = new Subtask(epic1.getId(), "Первая подзадача эпика №1",
@@ -62,9 +90,9 @@ public class Main {
             Subtask sub3 = new Subtask(epic2.getId(), "Единственная подзадача эпика №2",
                     "Очень детальное описание единственной подзадачи эпика №2");
 
-            sub1.setId(taskManager.addTask(sub1));
-            sub2.setId(taskManager.addTask(sub2));
-            sub3.setId(taskManager.addTask(sub3));
+            taskManager.addTask(sub1);
+            taskManager.addTask(sub2);
+            taskManager.addTask(sub3);
             System.out.println(taskManager);
 
             sub1.setStatus(TaskStatus.IN_PROGRESS);
@@ -92,3 +120,4 @@ public class Main {
         }
     }
 }
+
