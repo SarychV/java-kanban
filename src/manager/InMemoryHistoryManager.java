@@ -1,3 +1,8 @@
+package manager;
+
+import manager.HistoryManager;
+import task.Task;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -110,31 +115,4 @@ public class InMemoryHistoryManager implements HistoryManager {
             }
         }
     }
-
-    public static void main(String[] args) {
-        InMemoryHistoryManager mgr = new InMemoryHistoryManager();
-        SimpleTask task1 = new SimpleTask("Simple", "Testing string simple", 1, TaskStatus.NEW);
-        mgr.add(task1);
-        System.out.println(mgr.getHistory());
-
-        EpicTask task2 = new EpicTask("Epic", "Testing string epic");
-        task2.setId(2);
-        mgr.add(task2);
-        System.out.println(mgr.getHistory());
-
-        Subtask task3 = new Subtask(task2.getId(),"Subtask", "Testing string subtask",
-                3, TaskStatus.DONE);
-        mgr.add(task3);
-        System.out.println(mgr.getHistory());
-
-        mgr.add(task3);
-        System.out.println(mgr.getHistory());
-
-        mgr.add(task1);
-        System.out.println(mgr.getHistory());
-
-        mgr.remove(task1.getId());
-        System.out.println(mgr.getHistory());
-    }
-
 }

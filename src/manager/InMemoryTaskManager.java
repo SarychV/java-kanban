@@ -1,19 +1,26 @@
-import java.util.ArrayList;
-import java.util.HashMap;
+package manager;
+
+import manager.HistoryManager;
+import manager.Managers;
+import manager.TaskManager;
+import task.*;
+
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 public class InMemoryTaskManager implements TaskManager {
-    private final HashMap<Integer, SimpleTask> simpleTasks;
-    private final HashMap<Integer, EpicTask> epicTasks;
-    private final HashMap<Integer, Subtask> subtasks;
+    private final Map<Integer, SimpleTask> simpleTasks;
+    private final Map<Integer, EpicTask> epicTasks;
+    private final Map<Integer, Subtask> subtasks;
 
-    private final HistoryManager historyManager;
+    private final HistoryManager historyManager = Managers.getDefaultHistory();
 
-    public InMemoryTaskManager(HistoryManager history) {
+    public InMemoryTaskManager() {
         simpleTasks = new HashMap<>();
         epicTasks = new HashMap<>();
         subtasks = new HashMap<>();
-        historyManager = history;
     }
 
     @Override
@@ -50,7 +57,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-// **********************************************************  Методы для работы с задачами класса SimpleTask.
+// **********************************************************  Методы для работы с задачами класса task. SimpleTask.
     @Override
     public SimpleTask getSimpleTask(int id) {
         SimpleTask task = simpleTasks.get(id);
@@ -59,8 +66,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public List<Integer> getAllSimpleTaskIds() {
-        return List.copyOf(simpleTasks.keySet());
+    public List<SimpleTask> getAllSimpleTasks() {
+        return List.copyOf(simpleTasks.values());
     }
 
     @Override
@@ -94,7 +101,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
 
-// ********************************************************** Методы для работы с задачами класса EpicTask.
+// ********************************************************** Методы для работы с задачами класса task. EpicTask.
     @Override
     public EpicTask getEpicTask(int id) {
         EpicTask task = epicTasks.get(id);
@@ -103,8 +110,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public List<Integer> getAllEpicTasksIds() {
-        return List.copyOf(epicTasks.keySet());
+    public List<EpicTask> getAllEpicTasks() {
+        return List.copyOf(epicTasks.values());
     }
 
     @Override
@@ -195,7 +202,7 @@ public class InMemoryTaskManager implements TaskManager {
         return subtasks.containsKey(id);
     }
 
-    // ********************************************************** Методы для работы с задачами класса Subtask.
+    // ********************************************************** Методы для работы с задачами класса task. Subtask.
     @Override
     public Subtask getSubtask(int id) {
         Subtask task = subtasks.get(id);
@@ -204,8 +211,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public List<Integer> getAllSubtaskIds() {
-        return List.copyOf(subtasks.keySet());
+    public List<Subtask> getAllSubtasks() {
+        return List.copyOf(subtasks.values());
     }
 
     @Override
@@ -232,10 +239,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllSubtasks() {
-        for (int subtaskId: getAllSubtaskIds()) {
+        for (int subtaskId: subtasks.keySet()) {
             removeSubtask(subtaskId);
         }
-        for (int epicId: getAllEpicTasksIds()) {
+        for (int epicId: epicTasks.keySet()) {
             updateEpicStatus(epicId);
         }
     }
@@ -269,6 +276,10 @@ public class InMemoryTaskManager implements TaskManager {
             subtasks.put(subtaskId, task);
             updateEpicStatus(parentEpicId);
         }
+    }
+
+    public List<Task> getHistory() {
+        return historyManager.getHistory();
     }
 
     @Override

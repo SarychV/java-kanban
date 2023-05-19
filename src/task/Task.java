@@ -1,5 +1,7 @@
+package task;
+
 public abstract class Task {
-    int taskId;
+    private int taskId;
     private String title;
     private String description;
     private TaskStatus status;
@@ -46,7 +48,7 @@ public abstract class Task {
         return status;
     }
 
-    void setStatus(TaskStatus status) {
+    public void setStatus(TaskStatus status) {
         this.status = status;
     }
 
