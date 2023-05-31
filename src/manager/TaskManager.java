@@ -1,15 +1,17 @@
 package manager;
 
+import java.util.List;
+
 import task.Task;
 import task.SimpleTask;
 import task.EpicTask;
 import task.Subtask;
 
-import java.util.List;
-
 public interface TaskManager {
-    int addTask(Task task) throws ManagerException;
-    void updateTask(Task task) throws ManagerException;
+    int addTask(Task task);
+    void updateTask(Task task);
+    void removeTask(Task task);
+    Task getTask(int id);
 
     SimpleTask getSimpleTask(int id);
     List<SimpleTask> getAllSimpleTasks();
@@ -26,6 +28,6 @@ public interface TaskManager {
     void removeSubtask(int id);
     void removeAllSubtasks();
 
-    public List<Task> getHistory();
+    List<Task> getHistory();
 }
 

@@ -10,6 +10,10 @@ public class EpicTask extends Task {
         super(title, description);
         this.subtasks = new ArrayList<>();
     }
+    public EpicTask(String title, String description, int taskId, TaskStatus status) {
+        super(title, description, taskId, status);
+        this.subtasks = new ArrayList<>();
+    }
 
     public List<Integer> getSubtasks() {
         return List.copyOf(subtasks);
