@@ -373,6 +373,18 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (this.getClass() != obj.getClass()) return false;
+        InMemoryTaskManager anotherManager = (InMemoryTaskManager) obj;
+        return simpleTasks.equals(anotherManager.simpleTasks)
+                && epicTasks.equals(anotherManager.epicTasks)
+                && subtasks.equals(anotherManager.subtasks)
+                && historyManager.getHistory().equals(anotherManager.historyManager.getHistory());
+    }
+
+    @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
         buffer.append("Список задач менеджера\n");

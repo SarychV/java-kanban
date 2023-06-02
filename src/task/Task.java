@@ -1,5 +1,7 @@
 package task;
 
+import java.util.Objects;
+
 public abstract class Task {
     private int taskId;
     private String title;
@@ -50,6 +52,25 @@ public abstract class Task {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        Task anotherTask = (Task) obj;
+        return Objects.equals(this.title, anotherTask.title)
+                && Objects.equals(this.description, anotherTask.description)
+                && this.taskId == anotherTask.taskId
+                && this.status == anotherTask.status;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 17;
+        hash += taskId;
+        if (title != null) hash += hash * 31 + title.hashCode();
+        if (description != null) hash += hash * 31 + description.hashCode();
+        hash += status.ordinal();
+        return hash;
     }
 
     @Override

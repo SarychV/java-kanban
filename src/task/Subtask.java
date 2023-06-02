@@ -18,6 +18,21 @@ public class Subtask extends Task {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (this.getClass() != obj.getClass()) return false;
+        Subtask anotherTask = (Subtask) obj;
+        return super.equals(anotherTask)
+                && this.parentEpicId == anotherTask.parentEpicId;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode() + parentEpicId;
+    }
+
+    @Override
     public String toString() {
         return this.getClass().getSimpleName() + "{" + super.toString() + ", epic='" + parentEpicId + "'}";
     }
