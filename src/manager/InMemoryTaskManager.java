@@ -2,10 +2,10 @@ package manager;
 
 import task.*;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+import java.time.LocalDateTime;
+import java.util.*;
+
+import static java.util.stream.Collectors.summingInt;
 
 public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, SimpleTask> simpleTasks;
@@ -26,10 +26,10 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     protected int addTaskInMemory(Task task) {
-        int taskId = 0;
+        int taskId = -1;
         try {
             if (task == null) {
-                throw new NullPointerException();     // NullArgument
+                throw new NullPointerException("В метод addTaskInMemory() передана null-ссылка.");     // NullArgument
             }
             if (task instanceof SimpleTask) {
                 taskId = addSimpleTask((SimpleTask) task);
@@ -50,7 +50,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateTask(Task task) {
         try {
             if (task == null) {
-                throw new NullPointerException();     // NullArgument
+                throw new NullPointerException("В метод updateTask() передана null-ссылка.");     // NullArgument
             }
             if (task instanceof SimpleTask) {
                 updateSimpleTask((SimpleTask) task);
@@ -70,7 +70,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeTask(Task task) {
         try {
             if (task == null) {
-                throw new NullPointerException();     // NullArgument
+                throw new NullPointerException("В метод removeTask() передана null-ссылка.");     // NullArgument
             }
             int taskId = task.getId();
 
@@ -124,7 +124,6 @@ public class InMemoryTaskManager implements TaskManager {
                         "Задача с id=" + id + " в менеджере отсутствует. Удаление не выполнено.");
             historyManager.remove(id);
         } catch (ManagerException e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
         }
 
@@ -132,7 +131,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllSimpleTasks() {
-        for (Integer id : simpleTasks.keySet()) {
+        for (Integer id : Set.copyOf(simpleTasks.keySet())) {
             simpleTasks.remove(id);
             historyManager.remove(id);
         }
@@ -140,11 +139,20 @@ public class InMemoryTaskManager implements TaskManager {
 
     protected int addSimpleTask(SimpleTask task) {
         int taskId = task.getId();
-        if (taskId == 0) {
-            taskId = TaskId.generate();
-            task.setId(taskId);
+        try {
+            if (taskOverlapInTime(task)) {
+                throw new ManagerException("Подзадача " + task + "имеет пересечение по времени.");
+            } else {
+                if (taskId == 0) {
+                    taskId = TaskId.generate();
+                    task.setId(taskId);
+                }
+                simpleTasks.put(taskId, task);
+            }
+        } catch (ManagerException e) {
+            e.printStackTrace();
+            taskId = -1;
         }
-        simpleTasks.put(taskId, task);
         return taskId;
     }
 
@@ -154,11 +162,12 @@ public class InMemoryTaskManager implements TaskManager {
             if (simpleTasks.get(taskId) == null) {
                 throw new ManagerException(     // SimpleTaskDoesNotExist
                         "Задача с id=" + taskId + " в менеджере отсутствует. Обновление не выполнено.");
+            } else if (taskOverlapInTime(task)) {
+                throw new ManagerException("Подзадача " + task + "имеет пересечение по времени.");
             } else {
                 simpleTasks.put(taskId, task);
             }
         } catch (ManagerException e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -191,7 +200,6 @@ public class InMemoryTaskManager implements TaskManager {
             epicTasks.remove(id);
             historyManager.remove(id);
         } catch (ManagerException e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -199,7 +207,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeAllEpicTasks() {
         removeAllSubtasks();
-        for (int id : epicTasks.keySet()) {
+        for (int id : Set.copyOf(epicTasks.keySet())) {
             removeEpicTask(id);
         }
     }
@@ -219,7 +227,6 @@ public class InMemoryTaskManager implements TaskManager {
             epicTasks.put(taskId, task);
             return taskId;
         } catch (ManagerException e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         return taskId;
@@ -237,9 +244,11 @@ public class InMemoryTaskManager implements TaskManager {
                         "Списки подзадач у эпика при обновлении должны совпадать!");
             } else {
                 epicTasks.put(taskId, task);
+                updateEpicStatus(taskId);
+                updateEpicTimes(taskId);
+                //task.setStatus(taskInMap.getStatus());
             }
         } catch (ManagerException e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -275,6 +284,54 @@ public class InMemoryTaskManager implements TaskManager {
         return result;
     }
 
+    protected void updateEpicTimes(int epicId) {
+        EpicTask epic = epicTasks.get(epicId);
+        if (epic != null) {
+            if (epic.getSubtasks().size() == 0) {
+                epic.setStartTime(null);
+                epic.setDuration(0);
+                epic.setEndTime(null);
+            } else {
+                setEpicTimesBySubtasks(epicId);
+            }
+        }
+    }
+
+    private void setEpicTimesBySubtasks(int epicId) {
+        EpicTask epic = epicTasks.get(epicId);
+        List<Integer> subs = epic.getSubtasks();
+
+        // найти подзадачу с наименьшим начальным временем, установить startTime эпика
+        Optional<LocalDateTime> earliestTime = subs.stream()
+                .map(id -> subtasks.get(id).getStartTime())
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo);
+
+        if (earliestTime.isPresent()) epic.setStartTime(earliestTime.get());
+            else epic.setStartTime(null);
+
+        // определить duration эпика
+        int duration = subs.stream()
+                .map(id -> subtasks.get(id))
+                .collect(summingInt(Task::getDuration));
+        epic.setDuration(duration);
+
+        // найти подзадачу с наибольшим конечным временем, установить endTime эпика
+        Optional<LocalDateTime> lastTime = subs.stream()
+                .map(id -> subtasks.get(id))
+                .map(subtask -> {
+                    LocalDateTime startTime = subtask.getStartTime();
+                    if (startTime != null) {
+                        return startTime.plusMinutes(subtask.getDuration());
+                    } else
+                        return null;
+                })
+                .filter(Objects::nonNull)
+                .max(LocalDateTime::compareTo);
+        if (lastTime.isPresent()) epic.setEndTime(lastTime.get());
+            else epic.setEndTime(null);
+    }
+
     // ********************************************************** Методы для работы с задачами класса task. Subtask.
     @Override
     public Subtask getSubtask(int id) {
@@ -305,20 +362,21 @@ public class InMemoryTaskManager implements TaskManager {
                     "Эпик для подзадачи с id=" + id + " в менеджере отсутствует.");
             epic.unbindSubtask(id);
             updateEpicStatus(epicId);
+            updateEpicTimes(epicId);
 
         } catch (ManagerException e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
 
     @Override
     public void removeAllSubtasks() {
-        for (int subtaskId: subtasks.keySet()) {
+        for (int subtaskId: Set.copyOf(subtasks.keySet())) {
             removeSubtask(subtaskId);
         }
         for (int epicId: epicTasks.keySet()) {
             updateEpicStatus(epicId);
+            updateEpicTimes(epicId);
         }
     }
 
@@ -329,20 +387,24 @@ public class InMemoryTaskManager implements TaskManager {
         EpicTask parentEpic = epicTasks.get(parentEpicId);
         try {
             if (parentEpic == null) {       // BadParentEpic
-                throw new ManagerException("При добавлении подзадачи определите для нее эпик!");
+                throw new ManagerException("При добавлении подзадачи определите для нее существующий эпик!");
+            } else if (taskOverlapInTime(task)) {
+                throw new ManagerException("Подзадача " + task + "имеет пересечение по времени.");
             } else {
                 if(taskId == 0) {
                     taskId = TaskId.generate();
                     task.setId(taskId);
                 }
-                subtasks.put(taskId, task);
-                parentEpic.bindSubtask(taskId);
-                updateEpicStatus(parentEpicId);
+                if (subtasks.put(taskId, task) == null) {
+                    parentEpic.bindSubtask(taskId);
+                    updateEpicStatus(parentEpicId);
+                    updateEpicTimes(parentEpicId);
+                }
                 return taskId;
             }
         } catch (ManagerException e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
+            taskId = -1;
         }
         return taskId;
     }
@@ -358,18 +420,39 @@ public class InMemoryTaskManager implements TaskManager {
             } else if (parentEpicId != subtaskInMap.getParentEpicId()) { // SubtaskHasWrongEpic
                 throw new ManagerException(
                         "При обновлении подзадачи id эпика подзадачи должен оставаться прежним.");
+            } else if (taskOverlapInTime(task)) {
+                throw new ManagerException("Подзадача " + task + "имеет пересечение по времени.");
             } else {
                 subtasks.put(subtaskId, task);
                 updateEpicStatus(parentEpicId);
+                updateEpicTimes(parentEpicId);
             }
         } catch (ManagerException e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
 
     public List<Task> getHistory() {
         return historyManager.getHistory();
+    }
+
+    @Override
+    public Set<Task> getPrioritizedTasks() {
+        Set<Task> result = new TreeSet<>(new StartTimeComparator());
+        result.addAll(getAllSimpleTasks());
+        result.addAll(getAllSubtasks());
+        return result;
+    }
+
+    private boolean taskOverlapInTime(Task task) {
+        if (task == null) return false;
+        for (Task taskInManager: getPrioritizedTasks()) {
+            if(task.getId() != taskInManager.getId()) {
+                if (task.hasTimeIntersection(taskInManager))
+                    return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -417,5 +500,19 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         return buffer.toString();
+    }
+}
+
+class StartTimeComparator implements Comparator<Task> {
+    @Override
+    public int compare(Task t1, Task t2) {
+        if (t1.getStartTime() == null && t2.getStartTime() == null) {
+            return Integer.compare(t1.getId(), t2.getId());
+        }
+        if (t1.getStartTime() == null && t2.getStartTime() != null) return 1;
+        if (t1.getStartTime() != null && t2.getStartTime() == null) return -1;
+        if (t1.getStartTime().isBefore(t2.getStartTime())) return -1;
+        if (t1.getStartTime().isAfter(t2.getStartTime())) return 1;
+        return 0;
     }
 }

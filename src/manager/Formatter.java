@@ -2,6 +2,7 @@ package manager;
 
 import task.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +23,8 @@ public class Formatter {
         List<Integer> tasks = new ArrayList<>();
         String[] ids = historyLine.split(",");
         for (String id : ids) {
-            tasks.add(Integer.parseInt(id));
+            if (!id.isEmpty())
+                tasks.add(Integer.parseInt(id));
         }
         return tasks;
     }
@@ -32,16 +34,34 @@ public class Formatter {
     }
 
     private static String[] parseTaskToFields(Task task) {
-        int i = 0;
         List<String> fields = new ArrayList<>();
-        fields.add(i++, "" + task.getId());
-        fields.add(i++, formTypeField(task));
-        fields.add(i++, task.getTitle());
-        fields.add(i++, task.getStatus().name());
-        fields.add(i, task.getDescription());
+        fields.add("" + task.getId());
+        fields.add(formTypeField(task));
+        fields.add(task.getTitle());
+        fields.add(task.getStatus().name());
+        fields.add(task.getDescription());
+
         if (task instanceof Subtask) {
             int epicId = ((Subtask) task).getParentEpicId();
             fields.add("" + epicId);
+        } else {
+            fields.add("");
+        }
+
+        LocalDateTime startTime = task.getStartTime();
+        if (startTime != null)
+            fields.add(startTime.toString());
+        else
+            fields.add("");
+
+        fields.add("" + task.getDuration());
+
+        if (task instanceof EpicTask) {
+            startTime = task.getEndTime();
+            if (startTime != null)
+                fields.add(startTime.toString());
+            else
+                fields.add("");
         }
         return fields.toArray(new String[0]);
     }

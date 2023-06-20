@@ -7,9 +7,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final String filename;
@@ -21,8 +22,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     static public FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file.toString());
         boolean whileTaskRecords = true;
-        List<String> lines;
 
+        List<String> lines;
         try {
             lines = Files.readAllLines(file.toPath());
             lines.remove(0);  // Remove header.
@@ -56,7 +57,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 addTaskInMemory(task);
             }
         } catch (ManagerException e) {
-            System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -70,18 +70,32 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         try {
             TaskType type = TaskType.valueOf(params[1]);
             TaskStatus status = TaskStatus.valueOf(params[3]);
+            LocalDateTime start;
+            if (params[6].isEmpty()) start = null;
+                else start = LocalDateTime.parse(params[6]);
 
             switch (type) {
                 case TASK:
-                    task = new SimpleTask(params[2], params[4], Integer.parseInt(params[0]), status);
+                    task = new SimpleTask(params[2], params[4], Integer.parseInt(params[0]), status,
+                            start, Integer.parseInt(params[7]));
                     break;
+
                 case EPIC:
-                    task = new EpicTask(params[2], params[4], Integer.parseInt(params[0]), status);
+                    LocalDateTime end;
+                    if (params.length == countFieldsInFile()) {
+                        end = LocalDateTime.parse(params[8]);
+                    } else {
+                        end = null;
+                    }
+                    task = new EpicTask(params[2], params[4], Integer.parseInt(params[0]), status,
+                            start, Integer.parseInt(params[7]), end);
                     break;
+
                 case SUBTASK:
                     task = new Subtask(Integer.parseInt(params[5]), params[2],
-                                        params[4], Integer.parseInt(params[0]), status);
+                            params[4], Integer.parseInt(params[0]), status, start, Integer.parseInt(params[7]));
                     break;
+
                 default:
                     task = null;
             }
@@ -110,7 +124,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private String header() {
-        return "id,type,name,status,description,epic\n";
+        return "id,type,name,status,description,epic,start,duration,end\n";
     }
 
     private String tasks() {
@@ -210,7 +224,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
          * состояние менеджера до окончания удаления всех требуемых задач (подзадач).
          */
         super.removeAllSubtasks();
-        for (int id : epicTasks.keySet()) {
+        for (int id : Set.copyOf(epicTasks.keySet())) {
             super.removeEpicTask(id);
         }
         save();
@@ -247,7 +261,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         /* Реализовано через вызовы методов родительского класса, чтобы не сохранять в файл
          * состояние менеджера до окончания удаления всех требуемых задач (подзадач).
          */
-        for (int subtaskId: subtasks.keySet()) {
+        for (int subtaskId: Set.copyOf(subtasks.keySet())) {
             super.removeSubtask(subtaskId);
         }
         for (int epicId: epicTasks.keySet()) {
@@ -364,6 +378,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         System.out.println("Manager B*********************\n" + mgrB);
         System.out.println("Менеджер прочитался правильно: " + mgrA.equals(mgrB));
         System.out.println("История прочиталась правильно: " + mgrB.getHistory().equals(mgrA.getHistory()));
-                                                                                                            
     }
 }

@@ -1,12 +1,11 @@
 package manager;
 
-import manager.HistoryManager;
 import task.Task;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class InMemoryHistoryManager implements HistoryManager {
     private final CustomLinkedList history;
@@ -30,7 +29,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         return history.getTasks();
     }
 
-    private static class CustomLinkedList {
+    private class CustomLinkedList {
         Node head;
         Node tail;
 
@@ -53,7 +52,11 @@ public class InMemoryHistoryManager implements HistoryManager {
                 removeTaskIfInHistory(taskId);
                 // Добавить в список последний просмотр задачи.
                 newNode = new Node(tail, task, null);
-                tail.next = newNode;    // Привязали новый узел к хвосту.
+                if (tail != null) {
+                    tail.next = newNode;    // Привязали новый узел к хвосту.
+                } else {
+                    head = newNode;  // Если tail==null, значит список пуст и новый узел нужно привязать еще и к голове
+                }
                 tail = newNode;         // Сделали новый узел хвостом.
                 nodeCatalog.put(taskId, newNode);
             }

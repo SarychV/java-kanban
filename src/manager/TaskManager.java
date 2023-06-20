@@ -1,11 +1,12 @@
 package manager;
 
-import java.util.List;
-
-import task.Task;
-import task.SimpleTask;
 import task.EpicTask;
+import task.SimpleTask;
 import task.Subtask;
+import task.Task;
+
+import java.util.List;
+import java.util.Set;
 
 public interface TaskManager {
     int addTask(Task task);
@@ -29,5 +30,6 @@ public interface TaskManager {
     void removeAllSubtasks();
 
     List<Task> getHistory();
+    Set<Task> getPrioritizedTasks();
 }
 
