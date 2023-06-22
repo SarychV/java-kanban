@@ -4,16 +4,19 @@ import task.Subtask;
 
 import java.time.LocalDateTime;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
     { super.mgr = new InMemoryTaskManager(); }
 
     @Test
     void TasksWithTimesTest() {
-        System.out.println(mgr);
+        assertNull(et1.getStartTime());
         mgr.addTask(sub2);
-        System.out.println(mgr);
+        assertEquals(et1.getStartTime(), sub2.getStartTime());
         mgr.addTask(sub1);
-        System.out.println(mgr);
+        assertEquals(et1.getStartTime(), sub1.getStartTime());
     }
 
     @Test
@@ -28,7 +31,6 @@ class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
         sub3 = new Subtask(et1.getId(), "e1s6", "Description e1s6", LocalDateTime.of(2023, 6, 21, 4, 51), 15);
         mgr.addTask(sub3);
 
-        System.out.println(mgr);
-        System.out.println(mgr.getPrioritizedTasks());
+        assertEquals(6, mgr.getPrioritizedTasks().size());
     }
 }

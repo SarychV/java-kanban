@@ -40,6 +40,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     break;
                 }
             }
+            manager.prioritizedTasks.addAll(manager.getAllSimpleTasks());
+            manager.prioritizedTasks.addAll(manager.getAllSubtasks());
         } catch (IOException e) {
             e.printStackTrace();
         }

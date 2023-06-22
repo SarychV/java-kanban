@@ -13,6 +13,8 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, Subtask> subtasks;
 
     protected final HistoryManager historyManager = Managers.getDefaultHistory();
+    protected Set<Task> prioritizedTasks = new TreeSet<>(new StartTimeComparator());
+
 
     public InMemoryTaskManager() {
         simpleTasks = new HashMap<>();
@@ -148,6 +150,7 @@ public class InMemoryTaskManager implements TaskManager {
                     task.setId(taskId);
                 }
                 simpleTasks.put(taskId, task);
+                prioritizedTasks.add(task);
             }
         } catch (ManagerException e) {
             e.printStackTrace();
@@ -166,6 +169,7 @@ public class InMemoryTaskManager implements TaskManager {
                 throw new ManagerException("Подзадача " + task + "имеет пересечение по времени.");
             } else {
                 simpleTasks.put(taskId, task);
+                prioritizedTasks.add(task);
             }
         } catch (ManagerException e) {
             e.printStackTrace();
@@ -328,8 +332,11 @@ public class InMemoryTaskManager implements TaskManager {
                 })
                 .filter(Objects::nonNull)
                 .max(LocalDateTime::compareTo);
-        if (lastTime.isPresent()) epic.setEndTime(lastTime.get());
-            else epic.setEndTime(null);
+        if (lastTime.isPresent()) {
+            epic.setEndTime(lastTime.get());
+        } else {
+            epic.setEndTime(null);
+        }
     }
 
     // ********************************************************** Методы для работы с задачами класса task. Subtask.
@@ -399,6 +406,7 @@ public class InMemoryTaskManager implements TaskManager {
                     parentEpic.bindSubtask(taskId);
                     updateEpicStatus(parentEpicId);
                     updateEpicTimes(parentEpicId);
+                    prioritizedTasks.add(task);
                 }
                 return taskId;
             }
@@ -426,6 +434,7 @@ public class InMemoryTaskManager implements TaskManager {
                 subtasks.put(subtaskId, task);
                 updateEpicStatus(parentEpicId);
                 updateEpicTimes(parentEpicId);
+                prioritizedTasks.add(task);
             }
         } catch (ManagerException e) {
             e.printStackTrace();
@@ -438,15 +447,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Set<Task> getPrioritizedTasks() {
-        Set<Task> result = new TreeSet<>(new StartTimeComparator());
-        result.addAll(getAllSimpleTasks());
-        result.addAll(getAllSubtasks());
-        return result;
+        return prioritizedTasks;
     }
 
     private boolean taskOverlapInTime(Task task) {
         if (task == null) return false;
-        for (Task taskInManager: getPrioritizedTasks()) {
+        for (Task taskInManager: prioritizedTasks) {
             if(task.getId() != taskInManager.getId()) {
                 if (task.hasTimeIntersection(taskInManager))
                     return true;
