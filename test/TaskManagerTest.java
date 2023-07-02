@@ -1,8 +1,12 @@
 import manager.TaskManager;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import server.KVServer;
 import task.*;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,6 +21,14 @@ abstract class TaskManagerTest<T extends TaskManager> {
     Subtask sub1;
     Subtask sub2;
     Subtask sub3;
+
+    static KVServer kvs;
+
+    @BeforeAll
+    static void start() throws IOException {
+        kvs = new KVServer();
+        kvs.start();
+    }
 
     @BeforeEach
     void initTasks() {
@@ -287,4 +299,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(3, history.size());
     }
 
+    @AfterAll
+    static void stop() {
+        kvs.stop();
+    }
 }

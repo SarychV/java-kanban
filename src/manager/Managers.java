@@ -2,7 +2,7 @@ package manager;
 
 public class Managers {
     public static TaskManager getDefault() {
-        return new InMemoryTaskManager();
+        return HttpTaskManager.loadFromHttpServer("http://localhost:8078/");
     }
 
     public static HistoryManager getDefaultHistory() {

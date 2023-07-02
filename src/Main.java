@@ -1,13 +1,19 @@
 import manager.Managers;
 import manager.TaskManager;
+import server.KVServer;
 import task.EpicTask;
 import task.Subtask;
 
+import java.io.IOException;
+
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         System.out.println("Поехали!");
+        KVServer kvs = new KVServer();
+        kvs.start();
         testFinalSprint5();
+        kvs.stop();
     }
 
     public static void testFinalSprint5() {
@@ -50,9 +56,6 @@ public class Main {
         taskManager.removeTask(epic1);
         System.out.println(taskManager.getHistory());
 
-        /*} catch (Exception e) {
-            System.err.println("Перехват исключения в методе testFinalSprint5().");
-        }*/
     }
 }
 

@@ -143,7 +143,7 @@ public class InMemoryTaskManager implements TaskManager {
         int taskId = task.getId();
         try {
             if (taskOverlapInTime(task)) {
-                throw new ManagerException("Подзадача " + task + "имеет пересечение по времени.");
+                throw new ManagerException("Подзадача " + task + " имеет пересечение по времени.");
             } else {
                 if (taskId == 0) {
                     taskId = TaskId.generate();

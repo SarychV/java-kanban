@@ -1,14 +1,11 @@
-import manager.FileBackedTaskManager;
+import manager.HttpTaskManager;
 import manager.TaskManager;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
-class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
-    { super.mgr = FileBackedTaskManager.loadFromFile(new File("testTaskList.csv"));}
+class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
+    { super.mgr = HttpTaskManager.loadFromHttpServer("http://localhost:8078/");}
 
     @Test
     void checkEmptyManager() {
@@ -19,7 +16,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         mgr.removeAllSubtasks();
         mgr.removeAllSimpleTasks();
 
-        TaskManager emptyMgr = FileBackedTaskManager.loadFromFile(new File("testTaskList.csv"));
+        TaskManager emptyMgr = HttpTaskManager.loadFromHttpServer("http://localhost:8078/");
         assertEquals(0, emptyMgr.getAllSimpleTasks().size());
         assertEquals(0, emptyMgr.getAllEpicTasks().size());
         assertEquals(0, emptyMgr.getAllSubtasks().size());
@@ -30,7 +27,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     void checkEpicWithoutSubtasks() {
         mgr.removeAllEpicTasks();
         mgr.addTask(et1);
-        TaskManager oneEpicMgr = FileBackedTaskManager.loadFromFile(new File("testTaskList.csv"));
+        TaskManager oneEpicMgr = HttpTaskManager.loadFromHttpServer("http://localhost:8078/");
         assertEquals(0, oneEpicMgr.getAllSimpleTasks().size());
         assertEquals(1, oneEpicMgr.getAllEpicTasks().size());
         assertEquals(0, oneEpicMgr.getAllSubtasks().size());
@@ -39,7 +36,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
 
     @Test
     void checkEmptyHistory() {
-        TaskManager emptyHistoryMgr = FileBackedTaskManager.loadFromFile(new File("testTaskList.csv"));
+        TaskManager emptyHistoryMgr = HttpTaskManager.loadFromHttpServer("http://localhost:8078/");
         assertEquals(0, emptyHistoryMgr.getHistory().size());
     }
 }

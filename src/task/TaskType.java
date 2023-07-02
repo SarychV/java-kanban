@@ -1,5 +1,5 @@
 package task;
 
 public enum TaskType {
-    TASK, EPIC, SUBTASK
+    TASK, EPIC, SUBTASK, HISTORY, ALL
 }

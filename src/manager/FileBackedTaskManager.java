@@ -48,12 +48,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return manager;
     }
 
-    private void loadTask(String lineFromFile) {
+    void loadTask(String lineFromFile) {
         String[] fields = lineFromFile.split(",");
         Task task;
         try {
             if (fields.length > countFieldsInFile()) {
-                throw new ManagerException("Количество полей задачи в файле превышает допустимое!");
+                throw new ManagerException("Количество сохраненных полей задачи  превышает допустимое!");
             } else {
                 task = newTask(fields);
                 addTaskInMemory(task);
@@ -102,12 +102,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     task = null;
             }
         } catch (IllegalArgumentException e) {
-            throw new ManagerException("В файле неверный тип или статус задачи!");
+            throw new ManagerException("В сохраненных данных неверный тип или статус задачи!");
         }
         return task;
     }
 
-    private void loadHistory(String line) {
+    void loadHistory(String line) {
         List<Integer> taskIds = Formatter.historyFromString(line);
         for (int id : taskIds) {
             getTaskInMemory(id);
@@ -125,11 +125,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    private String header() {
+    String header() {
         return "id,type,name,status,description,epic,start,duration,end\n";
     }
 
-    private String tasks() {
+    String tasks() {
         StringBuilder result = new StringBuilder();
         List<Task> tasks = new LinkedList<>();
 
@@ -144,7 +144,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return result.toString();
     }
 
-    private String blank() {
+    String blank() {
         return "\n";
     }
 
@@ -290,95 +290,4 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return super.equals(obj);
     }
 
-    public static void main(String... unused) {
-        String filename = "tasklist.csv";
-        FileBackedTaskManager mgrA = new FileBackedTaskManager(filename);
-        SimpleTask st1 = new SimpleTask("T1", "Simple task 1");
-        SimpleTask st2 = new SimpleTask("T2", "Simple task 2");
-
-        st1.setId(mgrA.addTask(st1));
-        st2.setId(mgrA.addTask(st2));
-        mgrA.getSimpleTask(st1.getId());
-        mgrA.getTask(st2.getId());
-        mgrA.getTask(st1.getId());
-        st2.setStatus(TaskStatus.DONE);
-        mgrA.updateTask(st2);
-        System.out.println(mgrA);
-        System.out.println(mgrA.getHistory());
-
-        //,EPIC,Epic2,DONE,Description epic2,
-        //,SUBTASK,Sub Task2,DONE,Description sub task3,2
-        EpicTask et1 = new EpicTask("Epic2", "Description epic2");
-        et1.setId(mgrA.addTask(et1));
-        Subtask sub1 = new Subtask(et1.getId(), "Sub Task2", "Description sub task3");
-        sub1.setId(mgrA.addTask(sub1));
-        System.out.println(mgrA.getHistory());
-        sub1.setStatus(TaskStatus.DONE);
-        mgrA.updateTask(sub1);
-        mgrA.getSubtask(sub1.getId());
-        System.out.println(mgrA);
-        System.out.println(mgrA.getHistory());
-
-        File file = new File(filename);
-        FileBackedTaskManager mgrB = loadFromFile(file);
-
-        SimpleTask st1Cp1 = new SimpleTask("T1", "Simple task 1", st1.getId(),st1.getStatus());
-        SimpleTask st1Cp2 = new SimpleTask("T1", "Simple task 1", st1.getId(),st1.getStatus());
-        System.out.println("st1 == st1: " + (st1 == st1));
-        System.out.println("st1 == st2: " + (st1 == st2));
-        System.out.println("st1 == st1Cp1: " + (st1 == st1Cp1));
-        System.out.println("st1 == st1Cp2: " + (st1 == st1Cp2));
-        System.out.println("st1Cp1 == st1Cp2: " + (st1Cp1 == st1Cp2));
-        System.out.println("st1Cp2 == st1Cp1: " + (st1Cp2 == st1Cp1));
-        System.out.println();
-        System.out.println("st1.equals(st1): " + (st1.equals(st1)));
-        System.out.println("st1.equals(st2): " + (st1.equals(st2)));
-        System.out.println("st1.equals(st1Cp1): " + (st1.equals(st1Cp1)));
-        System.out.println("st1.equals(st1Cp2): " + (st1.equals(st1Cp2)));
-        System.out.println("st1Cp1.equals(st1Cp2): " + (st1Cp1.equals(st1Cp2)));
-        System.out.println("st1Cp2.equals(st1Cp1): " + (st1Cp2.equals(st1Cp1)));
-        System.out.println("\n");
-
-        // System.out.println(et1);
-        // et1.unbindSubtask(sub1.getId());
-        // System.out.println(et1);
-        // Эпик et1 содержит подзадачу, поэтому он не равен эпикам et1Cp1 и et1Cp2, которые равны между собой.
-        // Если удалить первые три закомментированные строки, то все эпики станут равны.
-        EpicTask et1Cp1 = new EpicTask("Epic2", "Description epic2", et1.getId(), et1.getStatus());
-        EpicTask et1Cp2 = new EpicTask("Epic2", "Description epic2", et1.getId(), et1.getStatus());
-        System.out.println("et1 == et1: " + (et1 == et1));
-        System.out.println("et1 == et1Cp1: " + (et1 == et1Cp1));
-        System.out.println("et1 == et1Cp2: " + (et1 == et1Cp2));
-        System.out.println("et1Cp1 == et1Cp2: " + (et1Cp1 == et1Cp2));
-        System.out.println("et1Cp2 == et1Cp1: " + (et1Cp2 == et1Cp1));
-        System.out.println();
-        System.out.println("et1.equals(et1): " + (et1.equals(et1)));
-        System.out.println("et1.equals(et1Cp1): " + (et1.equals(et1Cp1)));
-        System.out.println("et1.equals(et1Cp2): " + (et1.equals(et1Cp2)));
-        System.out.println("et1Cp1.equals(et1Cp2): " + (et1Cp1.equals(et1Cp2)));
-        System.out.println("et1Cp2.equals(et1Cp10: " + (et1Cp2.equals(et1Cp1)));
-        System.out.println("\n");
-
-        Subtask sub1Cp1 = new Subtask(et1.getId(), "Sub Task2", "Description sub task3",
-                                sub1.getId(), sub1.getStatus());
-        Subtask sub1Cp2 = new Subtask(et1.getId(), "Sub Task2", "Description sub task3",
-                                sub1.getId(), sub1.getStatus());
- 
-        System.out.println("sub1 == sub1: " + (sub1 == sub1));                                            
-        System.out.println("sub1 == sub1Cp1: " + (sub1 == sub1Cp1));                                      
-        System.out.println("sub1 == sub1Cp2: " + (sub1 == sub1Cp2));                                      
-        System.out.println("sub1Cp1 == sub1Cp2: " + (sub1Cp1 == sub1Cp2));                                
-        System.out.println("sub1Cp2 == sub1Cp1: " + (sub1Cp2 == sub1Cp1));                                
-        System.out.println();                                                                         
-        System.out.println("sub1.equals(sub1): " + (sub1.equals(sub1)));                                  
-        System.out.println("sub1.equals(sub1Cp1): " + (sub1.equals(sub1Cp1)));                            
-        System.out.println("sub1.equals(sub1Cp2): " + (sub1.equals(sub1Cp2)));                            
-        System.out.println("sub1Cp1.equals(sub1Cp2): " + (sub1Cp1.equals(sub1Cp2)));                      
-        System.out.println("sub1Cp2.equals(sub1Cp10: " + (sub1Cp2.equals(sub1Cp1)));                      
-        System.out.println("\n");                                                                     
-                                                                                                      
-        System.out.println("Manager B*********************\n" + mgrB);
-        System.out.println("Менеджер прочитался правильно: " + mgrA.equals(mgrB));
-        System.out.println("История прочиталась правильно: " + mgrB.getHistory().equals(mgrA.getHistory()));
-    }
 }

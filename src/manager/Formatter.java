@@ -74,7 +74,7 @@ public class Formatter {
         } else if (task instanceof Subtask) {
             return TaskType.SUBTASK.name();
         } else {
-            return "UNDEFINED";
+            return "UNDEF";
         }
     }
 }
