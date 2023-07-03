@@ -1,11 +1,29 @@
 import manager.HttpTaskManager;
 import manager.TaskManager;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import server.KVServer;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
     { super.mgr = HttpTaskManager.loadFromHttpServer("http://localhost:8078/");}
+
+
+    static KVServer kvs;
+    /*@BeforeAll @AfterAll требуют статических методов (без static функции с этими аннотациями не запускаются),
+     а поскольку методы, где используется kvs, должны быть статическими, то и KVServer kvs
+     тоже должен быть статическим:((
+    */
+
+    @BeforeAll
+    static void start() throws IOException {
+        kvs = new KVServer();
+        kvs.start();
+    }
 
     @Test
     void checkEmptyManager() {
@@ -38,5 +56,10 @@ class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
     void checkEmptyHistory() {
         TaskManager emptyHistoryMgr = HttpTaskManager.loadFromHttpServer("http://localhost:8078/");
         assertEquals(0, emptyHistoryMgr.getHistory().size());
+    }
+
+    @AfterAll
+    static void stop() {
+        kvs.stop();
     }
 }
