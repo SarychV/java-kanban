@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Optional;
 
 
-/* task JSON strings for testing
+/* JSON строки для тестирования API
 {"taskId":0,"title":"simple","description":"simple description","status":"NEW","duration":23,"startTime":"2023-06-30T22:17"}
 {"subtasks":[],"endTime":null,"taskId":0,"title":"epic","description":"epic description","status":"NEW","duration":0,"startTime":null}
 {"parentEpicId":3,"taskId":0,"title":"title","description":"description","status":"NEW","duration":10,"startTime":"2023-06-30T22:03"}
@@ -64,15 +64,10 @@ public class HttpTaskServer {
             TaskType taskType;
 
             int taskId = -1;
-            /* -1 не используется для всех обозначения всех задач.
-            Это начальное значение, означающее, что id использовать не надо.
+            /* Это начальное значение, означающее, что id использовать не надо.
             У меня в коде это некорректное значение id (используется везде).
             Проще говоря, это значение, что сервером taskId не получен.
-            Если значение получено, то taskId будет целым положительным числом.
-
-            Имеет ли смысл переделывать taskId в Integer и во всем модуле менять логику работы,
-            и вместо проверки -1 делать проверку на null? На мой взгляд по смыслу это одно и то же...
-            Предлагаю оставить taskId int'oм со значением -1 (поскольку места меньше занимает🙂). */
+            Если значение получено, то taskId будет целым положительным числом. */
 
             String requestMethod;
             String taskJson;
@@ -214,12 +209,14 @@ public class HttpTaskServer {
             Optional<Task> taskFromJson = getTaskFromJson(taskType, taskJson);
             if (taskFromJson.isPresent()) {
                 Task task = taskFromJson.get();
-                System.out.println("Task after json =" + task);
                 if (task.getId() <= 0) {
                     taskManager.addTask(task);
                 } else {
                     taskManager.updateTask(task);
                 }
+            } else {
+                // Направить клиенту код статуса о неудачной обработке задачи
+                // В частности, может быть неверным taskType или задача в формате JSON содержит неверные поля.
             }
             try {
                 this.exchange.sendResponseHeaders(200, -1);

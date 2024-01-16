@@ -12,6 +12,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Постман: https://www.getpostman.com/collections/a83b61d9e1c81c10575c
+ * Реализация сервера для хранения содержимого менеджера задач в сети
  */
 public class KVServer {
 	public static final int PORT = 8078;

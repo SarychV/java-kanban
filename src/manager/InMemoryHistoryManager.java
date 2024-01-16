@@ -37,9 +37,9 @@ public class InMemoryHistoryManager implements HistoryManager {
         private final Map<Integer, Node> nodeCatalog = new HashMap<>();
 
         public void linkLast(Task task) {
-            // Получить идентификатор задачи.
             int taskId;
             Node newNode;
+
             if (task == null) return;
                 else taskId = task.getId();
 
@@ -53,11 +53,12 @@ public class InMemoryHistoryManager implements HistoryManager {
                 // Добавить в список последний просмотр задачи.
                 newNode = new Node(tail, task, null);
                 if (tail != null) {
-                    tail.next = newNode;    // Привязали новый узел к хвосту.
+                    tail.next = newNode;            // Привязали новый узел к хвосту списка.
                 } else {
-                    head = newNode;  // Если tail==null, значит список пуст и новый узел нужно привязать еще и к голове
+                    head = newNode;                 // Если tail==null, значит список пуст и новый узел
+                                                    // нужно привязать еще и к голове
                 }
-                tail = newNode;         // Сделали новый узел хвостом.
+                tail = newNode;                     // Сделали новый узел хвостом.
                 nodeCatalog.put(taskId, newNode);
             }
         }
@@ -116,6 +117,18 @@ public class InMemoryHistoryManager implements HistoryManager {
                 head = null;
                 tail = null;
             }
+        }
+    }
+
+    class Node {
+        Task item;
+        Node prev;
+        Node next;
+
+        Node(Node prev, Task task, Node next) {
+            this.prev = prev;
+            this.item = task;
+            this.next = next;
         }
     }
 }

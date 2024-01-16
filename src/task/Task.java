@@ -8,29 +8,28 @@ public abstract class Task {
     private String title;
     private String description;
     private TaskStatus status;
+    int duration;
+    LocalDateTime startTime;
 
-    protected int duration;
-    protected LocalDateTime startTime;
-
-    protected Task(String title, String description) {
+    Task(String title, String description) {
         this.title = title;
         this.description = description;
         this.status = TaskStatus.NEW;
     }
 
-    protected Task(String title, String description, int taskId, TaskStatus status) {
+    Task(String title, String description, int taskId, TaskStatus status) {
         this(title, description);
         this.taskId = taskId;
         this.status = status;
     }
 
-    protected Task(String title, String description, LocalDateTime startTime, int durationInMinutes) {
+    Task(String title, String description, LocalDateTime startTime, int durationInMinutes) {
         this(title, description);
         this.startTime =  startTime;
         this.duration = durationInMinutes;
     }
 
-    protected  Task(String title, String description,
+    Task(String title, String description,
                     int taskId, TaskStatus status,
                     LocalDateTime startTime, int durationInMinutes) {
         this.title = title;

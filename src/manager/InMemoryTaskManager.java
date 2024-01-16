@@ -8,18 +8,16 @@ import java.util.*;
 import static java.util.stream.Collectors.summingInt;
 
 public class InMemoryTaskManager implements TaskManager {
-    private final Map<Integer, SimpleTask> simpleTasks;
-    protected final Map<Integer, EpicTask> epicTasks;
-    protected final Map<Integer, Subtask> subtasks;
+    private final Map<Integer, SimpleTask> simpleTasks = new HashMap<>();
+    final Map<Integer, EpicTask> epicTasks = new HashMap<>();
+    final Map<Integer, Subtask> subtasks = new HashMap<>();
+    final HistoryManager historyManager = Managers.getDefaultHistory();
 
-    protected final HistoryManager historyManager = Managers.getDefaultHistory();
-    protected Set<Task> prioritizedTasks = new TreeSet<>(new StartTimeComparator());
-
+    // Сформированный по приоритетам список задач (отсортированный по startTime).
+    // Если дата старта не задана, задача помещается в конец списка задач, подзадач.
+    final Set<Task> prioritizedTasks = new TreeSet<>(new StartTimeComparator());
 
     public InMemoryTaskManager() {
-        simpleTasks = new HashMap<>();
-        epicTasks = new HashMap<>();
-        subtasks = new HashMap<>();
     }
 
     @Override
@@ -27,7 +25,7 @@ public class InMemoryTaskManager implements TaskManager {
         return addTaskInMemory(task);
     }
 
-    protected int addTaskInMemory(Task task) {
+    int addTaskInMemory(Task task) {
         int taskId = -1;
         try {
             if (task == null) {
@@ -94,7 +92,7 @@ public class InMemoryTaskManager implements TaskManager {
         return getTaskInMemory(id);
     }
 
-    protected Task getTaskInMemory(int id) {
+    Task getTaskInMemory(int id) {
         Task task;
         if ((task = getSimpleTask(id)) != null) {
             return task;
@@ -105,11 +103,11 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-// **********************************************************  Методы для работы с задачами класса task. SimpleTask.
+// **********************************************************  Методы для работы с задачами класса SimpleTask.
     @Override
     public SimpleTask getSimpleTask(int id) {
         SimpleTask task = simpleTasks.get(id);
-        historyManager.add(task);
+        if (task != null) historyManager.add(task);
         return task;
     }
 
@@ -177,11 +175,11 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
 
-// ********************************************************** Методы для работы с задачами класса task. EpicTask.
+// ********************************************************** Методы для работы с задачами класса EpicTask.
     @Override
     public EpicTask getEpicTask(int id) {
         EpicTask task = epicTasks.get(id);
-        historyManager.add(task);
+        if (task != null) historyManager.add(task);
         return task;
     }
 
@@ -220,7 +218,7 @@ public class InMemoryTaskManager implements TaskManager {
         int taskId = task.getId();
         try {
             // Чтобы создался новый эпик, необходимо чтобы его список подзадач был пустым
-            if (task.getSubtasks().size() != 0) {
+            if (!task.getSubtasks().isEmpty()) {
                 throw new ManagerException(
                         "Список подзадач эпика при добавлении в менеджер должен быть пустым!");
             }
@@ -260,7 +258,7 @@ public class InMemoryTaskManager implements TaskManager {
     protected void updateEpicStatus(int epicId) {
         EpicTask epic = epicTasks.get(epicId);
         if (epic != null) {
-            if (epic.getSubtasks().size() == 0) {
+            if (!epic.getSubtasks().isEmpty()) {
                 epic.setStatus(TaskStatus.NEW);
             } else {
                 epic.setStatus(calculateStatus(getSubtaskStatuses(epicId)));
@@ -291,7 +289,7 @@ public class InMemoryTaskManager implements TaskManager {
     protected void updateEpicTimes(int epicId) {
         EpicTask epic = epicTasks.get(epicId);
         if (epic != null) {
-            if (epic.getSubtasks().size() == 0) {
+            if (!epic.getSubtasks().isEmpty()) {
                 epic.setStartTime(null);
                 epic.setDuration(0);
                 epic.setEndTime(null);
@@ -316,13 +314,13 @@ public class InMemoryTaskManager implements TaskManager {
 
         // определить duration эпика
         int duration = subs.stream()
-                .map(id -> subtasks.get(id))
+                .map(subtasks::get)
                 .collect(summingInt(Task::getDuration));
         epic.setDuration(duration);
 
         // найти подзадачу с наибольшим конечным временем, установить endTime эпика
         Optional<LocalDateTime> lastTime = subs.stream()
-                .map(id -> subtasks.get(id))
+                .map(subtasks::get)
                 .map(subtask -> {
                     LocalDateTime startTime = subtask.getStartTime();
                     if (startTime != null) {
@@ -339,11 +337,11 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    // ********************************************************** Методы для работы с задачами класса task. Subtask.
+    // ********************************************************** Методы для работы с задачами класса Subtask.
     @Override
     public Subtask getSubtask(int id) {
         Subtask task = subtasks.get(id);
-        historyManager.add(task);
+        if (task != null ) historyManager.add(task);
         return task;
     }
 
@@ -452,8 +450,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     private boolean taskOverlapInTime(Task task) {
         if (task == null) return false;
+        int taskId = task.getId();
+
         for (Task taskInManager: prioritizedTasks) {
-            if(task.getId() != taskInManager.getId()) {
+            if(taskId != taskInManager.getId()) {
                 if (task.hasTimeIntersection(taskInManager))
                     return true;
             }
@@ -479,7 +479,7 @@ public class InMemoryTaskManager implements TaskManager {
         buffer.append("Список задач менеджера\n");
 
         buffer.append("Список обычных задач:\n");
-        if (simpleTasks.size() == 0) {
+        if (simpleTasks.isEmpty()) {
             buffer.append("\tСписок пуст..\n");
         } else {
             for (SimpleTask simple : simpleTasks.values()) {
@@ -488,7 +488,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         buffer.append("Список эпиков:\n");
-        if (epicTasks.size() == 0) {
+        if (epicTasks.isEmpty()) {
             buffer.append("\tСписок пуст..\n");
         } else {
             for (EpicTask epic : epicTasks.values()) {
@@ -497,7 +497,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         buffer.append("Список подзадач:\n");
-        if (subtasks.size() == 0) {
+        if (subtasks.isEmpty()) {
             buffer.append("\tСписок пуст..\n");
         } else {
             for (Subtask subtask : subtasks.values()) {

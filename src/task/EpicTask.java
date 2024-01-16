@@ -6,34 +6,27 @@ import java.util.List;
 import java.util.Objects;
 
 public class EpicTask extends Task {
-    private final List<Integer> subtasks;
+    private final List<Integer> subtasks = new ArrayList<>();
     protected LocalDateTime endTime;
 
 
     public EpicTask(String title, String description) {
         super(title, description);
-        this.subtasks = new ArrayList<>();
         if (startTime != null) {
             endTime = startTime.plusMinutes(duration);
-        } else {
-            endTime = null;
         }
     }
 
     public EpicTask(String title, String description, int taskId, TaskStatus status) {
         super(title, description, taskId, status);
-        this.subtasks = new ArrayList<>();
         if (startTime != null) {
-            this.endTime = startTime.plusMinutes(duration);
-        } else {
-            endTime = null;
+            endTime = startTime.plusMinutes(duration);
         }
     }
 
     public EpicTask(String title, String description, int taskId, TaskStatus status,
                     LocalDateTime startTime, int duration, LocalDateTime endTime) {
         super(title, description, taskId, status, startTime, duration);
-        this.subtasks = new ArrayList<>();
         this.endTime = endTime;
     }
 
@@ -43,7 +36,7 @@ public class EpicTask extends Task {
 
     @Override
     public LocalDateTime getEndTime() {
-        return this.endTime;
+        return endTime;
     }
 
     public void setEndTime(LocalDateTime endTime) {

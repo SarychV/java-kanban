@@ -9,6 +9,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/*
+ * Класс HttpTaskManager обеспечивает сохранность задач на http-сервере, роль которого
+ * исполняет KVServer (key-value server).
+ */
 public class HttpTaskManager extends FileBackedTaskManager {
     private final KVTaskClient kvsClient;
     private final String serverUrl;

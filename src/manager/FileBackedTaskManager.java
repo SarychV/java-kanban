@@ -21,12 +21,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     static public FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager manager = new FileBackedTaskManager(file.toString());
+        // Когда в файле встретится пустая строка, после нее начнется раздел с историей просмотров задач.
+        // До этого момента whileTaskRecords имеет значение true.
         boolean whileTaskRecords = true;
 
         List<String> lines;
         try {
             lines = Files.readAllLines(file.toPath());
-            lines.remove(0);  // Remove header.
+            lines.remove(0);  // Удалить заголовок в файле.
 
             for (String line : lines) {
                 if (whileTaskRecords) {
@@ -53,7 +55,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Task task;
         try {
             if (fields.length > countFieldsInFile()) {
-                throw new ManagerException("Количество сохраненных полей задачи  превышает допустимое!");
+                throw new ManagerException("Количество сохраненных полей задачи превышает допустимое!");
             } else {
                 task = newTask(fields);
                 addTaskInMemory(task);
@@ -61,10 +63,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } catch (ManagerException e) {
             e.printStackTrace();
         }
-    }
-
-    private int countFieldsInFile() {
-        return header().strip().split(",").length;
     }
 
     private Task newTask(String[] params) throws ManagerException {
@@ -123,6 +121,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private int countFieldsInFile() {
+        return header().strip().split(",").length;
     }
 
     String header() {
